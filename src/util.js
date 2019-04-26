@@ -5,3 +5,5 @@ export const arrayfy = array =>
   !array ? [] : Array.isArray(array) ? array : [array]
 
 export const isNew = (prev, next) => key => prev[key] !== next[key]
+
+export const getKey = node => ((node || {}).props || {}).key

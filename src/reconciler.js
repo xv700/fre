@@ -1,12 +1,12 @@
 import { createElement, updateElement } from './element'
 import { resetCursor } from './hooks'
-import { defer, arrayfy } from './util'
+import { defer, arrayfy, getKey } from './util'
 
-const [HOST, HOOK, ROOT, PLACE, DELETE, UPDATE] = [
+const [HOST, HOOK, ROOT, INSERT, DELETE, UPDATE] = [
   'host',
   'hook',
   'root',
-  'place',
+  'insert',
   'delete',
   'update'
 ]
@@ -102,7 +102,6 @@ function updateHOOK (WIP) {
 }
 
 function reconcileChildren (WIP, newChildren) {
-  // B C D、A B C
   newChildren = arrayfy(newChildren)
   let oldFiber = WIP.alternate ? WIP.alternate.child : null
   let newFiber = null
@@ -110,10 +109,11 @@ function reconcileChildren (WIP, newChildren) {
 
   while (n < newChildren.length || oldFiber != null) {
     const child = newChildren[n]
-    const prevFiber = newFiber
+    const prevFiber = newFiber // 缓存上一次的newFiber
     const sameType = oldFiber && child && child.type == oldFiber.type
 
     if (sameType) {
+      // A B -> C A B
       newFiber = {
         tag: oldFiber.tag,
         base: oldFiber.base,
@@ -132,7 +132,7 @@ function reconcileChildren (WIP, newChildren) {
         type: child.type,
         props: child.props || { nodeValue: child.nodeValue },
         parent: WIP,
-        patchTag: PLACE
+        patchTag: INSERT
       }
     }
 
@@ -142,14 +142,15 @@ function reconcileChildren (WIP, newChildren) {
       WIP.patches.push(oldFiber)
     }
 
-    if (oldFiber) oldFiber = oldFiber.sibling
-
     if (n == 0) {
+      // 每一组的第一个元素
       WIP.child = newFiber
     } else if (prevFiber && child) {
+      // 第二个元素
       prevFiber.sibling = newFiber
     }
 
+    if (oldFiber) oldFiber = oldFiber.sibling
     n++
   }
 }
@@ -220,7 +221,7 @@ function commitWork (fiber) {
   }
   const parentNode = parentFiber.base
 
-  if (fiber.patchTag == PLACE && fiber.tag == HOST) {
+  if (fiber.patchTag == INSERT && fiber.tag == HOST) {
     parentNode.appendChild(fiber.base)
   } else if (fiber.patchTag == UPDATE && fiber.tag == HOST) {
     updateElement(fiber.base, fiber.alternate.props, fiber.props)
