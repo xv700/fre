@@ -14,6 +14,10 @@ let outid
 let frameLength = 5
 let frameDeadline = 0
 
+const channel = new MessageChannel
+const port = channel.port2
+channel.port1.onmessage = performWork
+
 function scheduleCallback (callback) {
   const currentTime = getTime()
   let startTime = currentTime
@@ -206,7 +210,3 @@ function peek (heap) {
   var first = heap[0]
   return first || null
 }
-
-const channel = new MessageChannel
-const port = channel.port2
-channel.port1.onmessage = performWork
